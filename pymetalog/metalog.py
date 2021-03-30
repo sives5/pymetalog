@@ -482,4 +482,40 @@ class metalog():
         if arr not in self.output_dict:
             raise KeyError()
         return self.output_dict[arr]
+    
+    def cdf(self,quantiles,terms=None):
+        """Returns the value of cumulative distribution function for the given quantiles
+            - 'quantiles': float or list/array of floats
+            - 'terms': float, number of metalog terms, default term_limit
 
+        Returns:
+            cdf: `float`: value of cumulative distribution function
+        """
+
+        if not terms:
+            terms = self.term_limit
+
+        x = self.output_dict
+
+        InitalResults = pd.DataFrame(data={
+        'term':(np.repeat((str(x['params']['term_lower_bound'])+' Terms'), len(x['M'].iloc[:,0]))),
+        'pdfValues':x['M'].iloc[:,0],
+        'quantileValues':x['M'].iloc[:,1],
+        'cumValue':x['M']['y']})
+
+        if len(x['M'].columns) > 3:
+            for i in range(2,((len(x['M'].iloc[0,:]) - 1) // 2 + 1)):
+                TempResults = pd.DataFrame(data={
+                    'term':np.repeat((str(x['params']['term_lower_bound'] + (i-1))+' Terms'),len(x['M'].iloc[:,0])),
+                    'pdfValues':x['M'].iloc[:,(i * 2 - 2)],
+                    'quantileValues':x['M'].iloc[:, (i * 2 - 1)],
+                    'cumValue':x['M']['y']
+                  })
+
+                InitalResults = InitalResults.append(pd.DataFrame(data=TempResults), ignore_index=True)
+
+        if hasattr(quantiles, "__len__"):
+            return np.array([InitalResults[InitalResults['term']==InitalResults.term.unique()[terms-2]].iloc[np.argmin(abs(InitalResults[InitalResults['term']==InitalResults.term.unique()[terms-2]]['quantileValues']-v))]['cumValue'] for v in map(float,quantiles)])
+        else:
+            quantiles = float(quantiles)
+            return InitalResults[InitalResults['term']==InitalResults.term.unique()[terms-2]].iloc[np.argmin(abs(InitalResults[InitalResults['term']==InitalResults.term.unique()[terms-2]]['quantileValues']-quantiles))]['cumValue']

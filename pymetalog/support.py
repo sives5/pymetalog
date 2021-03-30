@@ -26,7 +26,7 @@ def MLprobs(x_old, step_len):
   x = pd.DataFrame()
   x['x'] = x_old.copy()
 
-  x.sort_values(by='x')
+  x = x.sort_values(by='x').reset_index(drop=True)
 
   x['probs'] = 0
   for i in range(0,l):
@@ -49,7 +49,7 @@ def MLprobs(x_old, step_len):
 
       x_new = np.quantile(x_old, y)
 
-      df_x = {}
+      df_x = pd.DataFrame()
       df_x['x'] = x_new
       df_x['probs'] = y
       x = df_x

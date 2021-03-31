@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from scipy import optimize
 
 
 def MLprobs(x_old, step_len):
@@ -36,23 +37,23 @@ def MLprobs(x_old, step_len):
               x.loc[i, 'probs'] = x.loc[i-1, 'probs'] + 1/l
 
   #TODO method for turning off and on this n>100 estimation
-  if len(x.index) > 100:
-      y2 = np.linspace(step_len, 1 - step_len, int((1 - step_len) / step_len))
+#   if len(x.index) > 100:
+  y2 = np.linspace(step_len, 1 - step_len, int((1 - step_len) / step_len))
 
-      tailstep = step_len / 10
+  tailstep = step_len / 10
 
-      y1 = np.linspace(tailstep, (min(y2) - tailstep), int((min(y2) - tailstep) / tailstep))
+  y1 = np.linspace(tailstep, (min(y2) - tailstep), int((min(y2) - tailstep) / tailstep))
 
-      y3 = np.linspace((max(y2) + tailstep), (max(y2) + tailstep * 9), int((tailstep * 9) / tailstep))
+  y3 = np.linspace((max(y2) + tailstep), (max(y2) + tailstep * 9), int((tailstep * 9) / tailstep))
 
-      y = np.hstack((y1, y2, y3))
+  y = np.hstack((y1, y2, y3))
 
-      x_new = np.quantile(x_old, y)
+  x_new = np.quantile(x_old, y)
 
-      df_x = pd.DataFrame()
-      df_x['x'] = x_new
-      df_x['probs'] = y
-      x = df_x
+  df_x = pd.DataFrame()
+  df_x['x'] = x_new
+  df_x['probs'] = y
+  x = df_x
 
   return x
 
@@ -336,6 +337,32 @@ def newtons_method_metalog(m,q,term, bounds=None, boundedness=None):
       raise StopIteration('Approximation taking too long, quantile value: '+str(q)+' is to far from distribution median. Try plot() to see distribution.')
 
   return(y_now)
+
+def get_p_numerical_solver(m, q, term, bounds=None, boundedness=None):
+  """TODO: write docstring
+  """
+  # a simple newtons method application
+  if bounds == None:
+      bounds = m['params']['bounds']
+  if boundedness == None:
+      boundedness = m['params']['boundedness']
+
+  # if m is metalog
+  try:
+    m = m.output_dict
+    avec = 'a' + str(term)
+    a = m['A'][avec]
+  except:
+    a=m
+
+  f_to_zero = lambda y: quantileMetalog(a,y,term,bounds,boundedness)-q
+  y_sol = optimize.brentq(f_to_zero,0,1,full_output=True)
+  if y_sol[1].converged:
+      y_sol = y_sol[0]
+  else:
+      y_sol = y_sol[1]
+
+  return y_sol
 
 def pdfMetalog_density(m,t,y):
   m = m.output_dict

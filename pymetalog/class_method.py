@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import t
-from .support import newtons_method_metalog, pdfMetalog_density
+from .support import get_p_numerical_solver, pdfMetalog_density
 from .metalog import metalog
 
 def summary(m):
@@ -151,7 +151,7 @@ def dmetalog(m, q, term = 3):
     raise TypeError('Error: term must be a single positive numeric interger contained in the metalog object. Available '
                     'terms are: '+' '.join(map(str, valid_terms)))
 
-  qs = list(map(lambda qi: newtons_method_metalog(q=qi, m=m, term=term), q))
+  qs = list(map(lambda qi: get_p_numerical_solver(q=qi, m=m, term=term), q))
   ds = list(map(lambda yi: pdfMetalog_density(y=yi, m=m, t=term), qs))
 
   return (ds)
@@ -186,7 +186,7 @@ def pmetalog(m, q, term = 3):
     raise TypeError('Error: term must be a single positive numeric interger contained in the metalog object. Available '
                     'terms are: '+' '.join(map(str, valid_terms)))
 
-  qs = list(map(lambda qi: newtons_method_metalog(q=qi, m=m, term=term), q))
+  qs = list(map(lambda qi: get_p_numerical_solver(q=qi, m=m, term=term), q))
   return (qs)
 
 
